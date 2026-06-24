@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Drag-and-Drop Übung</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .progress {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .zone-container {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 80px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            border: 2px dashed #cbd5e0;
+            transition: all 0.2s;
+        }
+
+        .zone-container.success {
+            border-color: var(--success-color);
+            background: #f0fff4;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .word-token {
+            background: var(--primary-color);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: grab;
+            user-select: none;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            touch-action: none; /* Verhindert Scrolling beim Ziehen auf Mobile */
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .word-token:active {
+            cursor: grabbing;
+        }
+
+        .word-token.correct {
+            background: var(--success-color);
+            cursor: default;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        button {
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2d3748;
+        }
+
+        .translation-hint {
+            text-align: center;
+            font-style: italic;
+            margin-top: 15px;
+            color: #4a5568;
+            min-height: 24px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.4rem; }
+            .word-token { padding: 8px 14px; font-size: 1rem; }
+            .zone-container { padding: 12px; min-height: 70px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Ждать не дождаться</h1>
+    <p class="instruction">Bringe die Wörter per Drag-and-Drop in die richtige Reihenfolge. Falsche Wörter springen direkt zurück!</p>
+    
+    <div class="progress" id="progress">Satz 1 von 5</div>
+    
+    <!-- Zielzone für die richtigen Wörter -->
+    <div class="zone-container" id="target-zone"></div>
+    
+    <!-- Pool für die gemischten Wörter -->
+    <div class="words-container" id="words-pool"></div>
+    
+    <div class="translation-hint" id="translation"></div>
+    
+    <div class="controls">
+        <button id="restart-btn">Neustart</button>
+    </div>
+</div>
+
+<script>
+    // Die 5 Beispielsätze basierend auf der Anleitung
+    const sentences = [
+        {
+            correct: ["Я", "жду", "не", "дождусь", "когда", "мы", "уже", "поедем", "в", "путешествие"],
+            translation: "„Ich kann es kaum erwarten, bis wir endlich auf Reisen gehen.“"
+        },
+        {
+            correct: ["Я", "очень", "сильно", "жду", "время", "когда", "мы", "поедем", "в", "путешествие"],
+            translation: "„Ich warte sehnsüchtig auf die Zeit, in der wir verreisen werden.“"
+        },
+        {
+            correct: ["Мы", "ждут", "не", "дождутся", "каникул"],
+            translation: "„Sie können die Ferien kaum erwarten.“ (Kontext: Strukturvarianz)"
+        },
+        {
+            correct: ["Он", "ждет", "не", "дождется", "встречи"],
+            translation: "„Er kann das Treffen kaum erwarten.“"
+        },
+        {
+            correct: ["Я", "жду", "не", "дождусь", "субботы"],
+            translation: "„Ich kann den Samstag kaum erwarten.“"
+        }
+    ];
+
+    let currentSentenceIndex = 0;
+    let placedWords = [];
+
+    const targetZone = document.getElementById('target-zone');
+    const wordsPool = document.getElementById('words-pool');
+    const progressEl = document.getElementById('progress');
+    const translationEl = document.getElementById('translation');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Hilfsfunktion zum Mischen (Fisher-Yates)
+    function shuffle(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function initSentence() {
+        targetZone.innerHTML = '';
+        targetZone.classList.remove('success');
+        wordsPool.innerHTML = '';
+        placedWords = [];
+        
+        if (currentSentenceIndex >= sentences.length) {
+            progressEl.textContent = "Übung abgeschlossen!";
+            translationEl.textContent = "Hervorragend! Du hast alle Sätze richtig zusammengesetzt.";
+            return;
+        }
+
+        progressEl.textContent = `Satz ${currentSentenceIndex + 1} von ${sentences.length}`;
+        translationEl.textContent = sentences[currentSentenceIndex].translation;
+
+        const currentWords = sentences[currentSentenceIndex].correct;
+        const shuffledWords = shuffle(currentWords);
+
+        shuffledWords.forEach((word, index) => {
+            const token = document.createElement('div');
+            token.classList.add('word-token');
+            token.textContent = word;
+            token.setAttribute('draggable', 'true');
+            token.id = `word-${index}`;
+            
+            // Desktop Drag Events
+            token.addEventListener('dragstart', dragStart);
+            
+            // Mobile Touch Events via Polyfill-Logik
+            token.addEventListener('touchstart', handleTouchStart, { passive: false });
+            token.addEventListener('touchmove', handleTouchMove, { passive: false });
+            token.addEventListener('touchend', handleTouchEnd);
+
+            wordsPool.appendChild(token);
+        });
+    }
+
+    // Drag & Drop Variablen für Maus-Steuerung
+    let draggedElement = null;
+
+    function dragStart(e) {
+        draggedElement = e.target;
+    }
+
+    targetZone.addEventListener('dragover', (e) => e.preventDefault());
+    targetZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (draggedElement) handleWordDrop(draggedElement);
+    });
+
+    // Touch-Steuerung für Smartphones & Tablets
+    let touchStartData = null;
+
+    function handleTouchStart(e) {
+        const touch = e.touches[0];
+        touchStartData = {
+            element: e.target,
+            x: touch.clientX,
+            y: touch.clientY
+        };
+        e.target.style.transform = 'scale(1.1)';
+    }
+
+    function handleTouchMove(e) {
+        if (!touchStartData) return;
+        e.preventDefault(); // Verhindert das Scrollen der Seite beim Ziehen
+        const touch = e.touches[0];
+        const el = touchStartData.element;
+        
+        // Visuelles Feedback beim Bewegen auf Touchscreens
+        el.style.position = 'fixed';
+        el.style.left = `${touch.clientX - 40}px`;
+        el.style.top = `${touch.clientY - 20}px`;
+        el.style.zIndex = '1000';
+    }
+
+    function handleTouchEnd(e) {
+        if (!touchStartData) return;
+        const el = touchStartData.element;
+        
+        // Zurücksetzen der fixierten Positionierung für die Prüfung
+        el.style.position = '';
+        el.style.left = '';
+        el.style.top = '';
+        el.style.zIndex = '';
+        el.style.transform = '';
+
+        const touch = e.changedTouches[0];
+        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Prüfen, ob über der Zielzone losgelassen wurde
+        if (dropTarget && (dropTarget === targetZone || targetZone.contains(dropTarget))) {
+            handleWordDrop(el);
+        } else {
+            // Zurück zum Pool werfen bei Misserfolg
+            wordsPool.appendChild(el);
+        }
+        touchStartData = null;
+    }
+
+    // Direktes Feedback-System (Die Kernlogik)
+    function handleWordDrop(element) {
+        const wordText = element.textContent;
+        const currentSentence = sentences[currentSentenceIndex].correct;
+        const expectedWord = currentSentence[placedWords.length];
+
+        if (wordText === expectedWord) {
+            // Richtiges Wort: Einrasten und visuell anpassen
+            element.setAttribute('draggable', 'false');
+            element.classList.add('correct');
+            // Touch-Events entfernen
+            element.removeAttribute('touchstart');
+            element.removeAttribute('touchmove');
+            element.removeAttribute('touchend');
+            
+            targetZone.appendChild(element);
+            placedWords.push(wordText);
+
+            // Prüfen, ob der gesamte Satz vollständig ist
+            if (placedWords.length === currentSentence.length) {
+                targetZone.classList.add('success');
+                setTimeout(() => {
+                    currentSentenceIndex++;
+                    initSentence();
+                }, 1200); // Kurze Pause vorm nächsten Satz für visuelles Lob
+            }
+        } else {
+            // Falsches Wort: Direktes Feedback durch Zurückspringen in den Pool
+            wordsPool.appendChild(element);
+            
+            // Kurzer visueller Rüttel-Effekt / Rote Warnung
+            element.style.backgroundColor = 'var(--error-color)';
+            setTimeout(() => {
+                element.style.backgroundColor = '';
+            }, 400);
+        }
+        draggedElement = null;
+    }
+
+    // Neustart-Button Event
+    restartBtn.addEventListener('click', () => {
+        currentSentenceIndex = 0;
+        initSentence();
+    });
+
+    // Initialisierung beim Laden der Seite
+    initSentence();
+</script>
+
+</body>
+</html>
