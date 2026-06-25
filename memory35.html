@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Memory-Spiel</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .status-msg {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 30px;
+            margin-bottom: 15px;
+            color: var(--success-color);
+        }
+
+        /* Das responsive Memory-Spielfeld */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            perspective: 1000px; /* Für 3D-Effekt beim Umdrehen */
+        }
+
+        /* Einzelne Memory-Karte */
+        .memory-card {
+            height: 110px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s, opacity 0.8s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Umgedrehte Karte */
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Verschwundenes Paar */
+        .memory-card.matched {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Vorder- und Rückseite */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        /* Die verdeckte Rückseite */
+        .card-back {
+            background: linear-gradient(135deg, #2b6cb0, #4299e1);
+            color: white;
+            border: 2px solid #cbd5e0;
+            font-size: 1.5rem;
+        }
+
+        /* Die aufgedeckte Vorderseite */
+        .card-front {
+            background: white;
+            color: var(--text-color);
+            border: 3px solid var(--primary-color);
+            transform: rotateY(180deg);
+        }
+
+        /* Spezialfärbung bei Treffer/Fehler */
+        .memory-card.correct-flash .card-front {
+            border-color: var(--success-color);
+            background-color: #f0fff4;
+        }
+
+        .memory-card.wrong-flash .card-front {
+            border-color: var(--error-color);
+            background-color: #fed7d7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2d3748;
+        }
+
+        /* Responsive Anpassungen für Tablets und Smartphones */
+        @media (max-width: 650px) {
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3 Spalten auf Mobile */
+                gap: 10px;
+            }
+            .memory-card {
+                height: 95px;
+            }
+            .card-face {
+                font-size: 0.85rem;
+                padding: 5px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .memory-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 Spalten für sehr kleine Displays */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Wortschatz-Memory</h1>
+    <p class="instruction">Finde die zusammengehörenden Paare (Russisch – Deutsch). Richtige Paare verschwinden langsam!</p>
+    
+    <div class="status-msg" id="status-text"></div>
+
+    <div class="memory-grid" id="grid">
+        <!-- 12 Karten werden hier per JavaScript erzeugt -->
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn">Neustart</button>
+    </div>
+</div>
+
+<script>
+    // Die 6 Paare (insgesamt 12 Karten) basierend auf der Anleitung
+    const cardData = [
+        { id: 1, text: "ждать не дождаться", lang: "ru" },
+        { id: 1, text: "etwas kaum erwarten können", lang: "de" },
+        
+        { id: 2, text: "поехать в путешествие", lang: "ru" },
+        { id: 2, text: "auf Reisen gehen", lang: "de" },
+        
+        { id: 3, text: "Я очень сильно жду", lang: "ru" },
+        { id: 3, text: "Ich warte sehnsüchtig", lang: "de" },
+        
+        { id: 4, text: "время", lang: "ru" },
+        { id: 4, text: "die Zeit", lang: "de" },
+        
+        { id: 5, text: "Напишите в комментариях", lang: "ru" },
+        { id: 5, text: "Schreibt es in die Kommentare", lang: "de" },
+        
+        { id: 6, text: "А чего вы ждете?", lang: "ru" },
+        { id: 6, text: "Und worauf wartet ihr?", lang: "de" }
+    ];
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matchesFound = 0;
+
+    const grid = document.getElementById('grid');
+    const statusText = document.getElementById('status-text');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Mischen-Funktion
+    function shuffle(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function createBoard() {
+        grid.innerHTML = '';
+        statusText.textContent = '';
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+        matchesFound = 0;
+
+        const shuffledCards = shuffle(cardData);
+
+        shuffledCards.forEach(data => {
+            const card = document.createElement('div');
+            card.classList.add('memory-card');
+            card.dataset.pairId = data.id;
+
+            const front = document.createElement('div');
+            front.classList.add('card-face', 'card-front');
+            front.textContent = data.text;
+
+            const back = document.createElement('div');
+            back.classList.add('card-face', 'card-back');
+            back.textContent = "？";
+
+            card.appendChild(front);
+            card.appendChild(back);
+
+            card.addEventListener('click', flipCard);
+            grid.appendChild(card);
+        });
+    }
+
+    function flipCard() {
+        if (lockBoard) return;
+        if (this === firstCard) return; // Klick auf die bereits gewählte Karte blockieren
+
+        this.classList.add('flipped');
+
+        if (!firstCard) {
+            firstCard = this;
+            return;
+        }
+
+        secondCard = this;
+        checkMatch();
+    }
+
+    function checkMatch() {
+        const isMatch = firstCard.dataset.pairId === secondCard.dataset.pairId;
+        
+        if (isMatch) {
+            disableCards();
+        } else {
+            unflipCards();
+        }
+    }
+
+    function disableCards() {
+        lockBoard = true;
+        matchesFound++;
+
+        // Grünes Aufblinken für Erfolg
+        firstCard.classList.add('correct-flash');
+        secondCard.classList.add('correct-flash');
+
+        // Verzögert das langsame Verschwinden einleiten
+        setTimeout(() => {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            
+            resetBoard();
+
+            if (matchesFound === cardData.length / 2) {
+                statusText.textContent = "Super gemacht! Alle Paare gefunden! 🎉";
+            }
+        }, 600);
+    }
+
+    function unflipCards() {
+        lockBoard = true;
+
+        // Rotes Aufblinken für Fehler
+        firstCard.classList.add('wrong-flash');
+        secondCard.classList.add('wrong-flash');
+
+        // Wieder umdrehen nach einer Sekunde
+        setTimeout(() => {
+            firstCard.classList.remove('flipped', 'wrong-flash');
+            secondCard.classList.remove('flipped', 'wrong-flash');
+            resetBoard();
+        }, 1000);
+    }
+
+    function resetBoard() {
+        [firstCard, secondCard] = [null, null];
+        lockBoard = false;
+    }
+
+    restartBtn.addEventListener('click', createBoard);
+
+    // Initialer Spielstart
+    createBoard();
+</script>
+
+</body>
+</html>
