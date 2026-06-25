@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Interaktive Flipcard</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        /* 3D Flip Container */
+        .flip-scene {
+            width: 100%;
+            height: 480px;
+            perspective: 1000px;
+            cursor: pointer;
+            margin-bottom: 25px;
+        }
+
+        .flip-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            border-radius: 16px;
+        }
+
+        .flip-card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+        }
+
+        /* VORDERSEITE */
+        .card-front {
+            background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+            border-top: 8px solid var(--primary-color);
+        }
+
+        .question-tag {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .main-question {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .translation-sub {
+            font-size: 1.1rem;
+            color: #718096;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 15px;
+            font-size: 0.85rem;
+            color: #a0aec0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* RÜCKSEITE */
+        .card-back {
+            background: #ffffff;
+            transform: rotateY(180deg);
+            border-top: 8px solid var(--success-color);
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+
+        .audio-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0fff4;
+            border: 1px solid var(--success-color);
+            padding: 8px 18px;
+            border-radius: 30px;
+            color: #22543d;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            transition: background 0.2s;
+        }
+
+        .audio-banner:hover {
+            background: #c6f6d5;
+        }
+
+        .audio-icon {
+            font-size: 1.1rem;
+        }
+
+        .blocks-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 12px;
+            align-self: flex-start;
+        }
+
+        /* Satzbausteine für 4 Sätze */
+        .blocks-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .block-row {
+            background: #edf2f7;
+            padding: 10px 12px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .block-prefix {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .option-pill {
+            background: white;
+            border: 1px solid #cbd5e0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            line-height: 1.3;
+        }
+
+        .option-pill strong {
+            color: #2d3748;
+        }
+
+        .option-pill .translation {
+            color: #718096;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2d3748;
+        }
+
+        /* Mobile Optimierung */
+        @media (max-width: 550px) {
+            .flip-scene { height: 560px; } /* Erhöht für die 4 Sätze auf Smartphones */
+            .main-question { font-size: 1.4rem; }
+            .translation-sub { font-size: 0.95rem; }
+            .option-pill { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Aussprache & Satzbau-Trainer</h1>
+    <p class="instruction">Klicke auf die Karte, um das Audiobeispiel zu hören und die 4 Antwort-Varianten zu studieren.</p>
+
+    <div class="flip-scene" id="scene-container">
+        <div class="flip-card" id="card-element">
+            
+            <!-- Vorderseite -->
+            <div class="card-face card-front">
+                <div class="question-tag">Frage an dich</div>
+                <div class="main-question">А чего вы ждете не дождетесь?</div>
+                <div class="translation-sub">Und worauf wartet ihr sehnsüchtig?</div>
+                <div class="tap-hint">🔄 Klicke zum Umdrehen & Hören</div>
+            </div>
+
+            <!-- Rückseite -->
+            <div class="card-face card-back">
+                
+                <!-- Audio Button -->
+                <div class="audio-banner" id="audio-play-btn">
+                    <span class="audio-icon">🔊</span> Alle Beispiele nacheinander anhören
+                </div>
+
+                <div class="blocks-title">4 Möglichkeiten für deine Antwort:</div>
+                
+                <div class="blocks-container">
+                    <!-- Satz 1 -->
+                    <div class="block-row">
+                        <span class="block-prefix">Satz 1 (Ferien - Genitiv):</span>
+                        <div class="option-pill">
+                            Я жду не дождусь <strong>каникул</strong>.
+                            <span class="translation">Ich kann die Ferien kaum erwarten.</span>
+                        </div>
+                    </div>
+
+                    <!-- Satz 2 -->
+                    <div class="block-row">
+                        <span class="block-prefix">Satz 2 (Wochenende - Genitiv):</span>
+                        <div class="option-pill">
+                            Я жду nicht дождусь <strong>субботы</strong>.
+                            <span class="translation">Ich kann den Samstag kaum erwarten.</span>
+                        </div>
+                    </div>
+
+                    <!-- Satz 3 -->
+                    <div class="block-row">
+                        <span class="block-prefix">Satz 3 (Aktion - Infinitiv):</span>
+                        <div class="option-pill">
+                            Я жду не дождусь <strong>поехать в путешествие</strong>.
+                            <span class="translation">Ich kann es kaum erwarten, auf Reisen zu gehen.</span>
+                        </div>
+                    </div>
+
+                    <!-- Satz 4 -->
+                    <div class="block-row">
+                        <span class="block-prefix">Satz 4 (Zeitpunkt - Nebensatz):</span>
+                        <div class="option-pill">
+                            Я жду не дождусь, <strong>когда наступит лето</strong>.
+                            <span class="translation">Ich kann es kaum erwarten, bis der Sommer kommt.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tap-hint">🔄 Klicke zum Zurückdrehen</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn">Neustart (Vorderseite)</button>
+    </div>
+</div>
+
+<script>
+    const sceneContainer = document.getElementById('scene-container');
+    const cardElement = document.getElementById('card-element');
+    const audioPlayBtn = document.getElementById('audio-play-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Das Skript spricht nun die Frage gefolgt von allen 4 Beispielsätzen mit kurzen Pausen dazwischen
+    const textToSpeak = "А чего вы ждете не дождетесь? " +
+                        "Первый: Я жду не дождусь каникул. " +
+                        "Второй: Я жду не дождусь субботы. " +
+                        "Третий: Я жду не дождусь поехать в путешествие. " +
+                        "Четвертый: Я жду не дождусь, когда наступит лето.";
+
+    function speakRussian() {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'ru-RU';
+            utterance.rate = 0.82; // Leicht verlangsamt für optimale Verständlichkeit
+
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    sceneContainer.addEventListener('click', (e) => {
+        if (e.target.closest('#audio-play-btn')) return;
+
+        const isFlipped = cardElement.classList.toggle('is-flipped');
+        
+        if (isFlipped) {
+            setTimeout(speakRussian, 400);
+        }
+    });
+
+    audioPlayBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakRussian();
+    });
+
+    restartBtn.addEventListener('click', () => {
+        cardElement.classList.remove('is-flipped');
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+    });
+</script>
+
+</body>
+</html>
