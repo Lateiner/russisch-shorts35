@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Kontext-Verständnis</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--secondary-color);
+        }
+
+        .situation-box {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 2px solid var(--border-color);
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 1.05rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            width: 100%;
+            outline: none;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            transform: translateX(3px);
+        }
+
+        /* Zustände nach dem Klicken */
+        .option-btn.correct {
+            background: #c6f6d5;
+            border-color: var(--success-color);
+            color: #22543d;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background: #fed7d7;
+            border-color: var(--error-color);
+            color: #742a2a;
+        }
+
+        .feedback-text {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            min-height: 26px;
+            margin-bottom: 20px;
+        }
+
+        .feedback-text.correct { color: var(--success-color); }
+        .feedback-text.wrong { color: var(--error-color); }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .btn-control {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-control:hover:not(:disabled) {
+            background: #2d3748;
+        }
+
+        .btn-control:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        #restart-btn {
+            background: #718096;
+        }
+        #restart-btn:hover {
+            background: #4a5568;
+        }
+
+        /* Responsive Anpassungen */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.4rem; }
+            .situation-box { font-size: 1rem; padding: 15px; }
+            .option-btn { padding: 12px 15px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kontext-Verständnis</h1>
+    <p class="instruction">Lies die Situation und wähle die am besten passende russische Reaktion aus.</p>
+    
+    <div class="quiz-header">
+        <span id="question-number">Frage 1 von 4</span>
+        <span id="score-display">Punkte: 0</span>
+    </div>
+
+    <div class="situation-box" id="situation-text">
+        <!-- Wird dynamisch geladen -->
+    </div>
+
+    <div class="options-list" id="options-container">
+        <!-- Wird dynamisch geladen -->
+    </div>
+
+    <div class="feedback-text" id="feedback-display"></div>
+
+    <div class="controls">
+        <button class="btn-control" id="restart-btn">Neustart</button>
+        <button class="btn-control" id="next-btn" disabled>Nächste Frage</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            situation: "Anna hat seit Monaten Urlaub gebucht, morgen geht endlich ihr Flug. Sie packt voller Vorfreude ihren Koffer. Wie beschreibt sie ihre aktuelle Gefühlslage?",
+            options: [
+                "Я вообще не хочу ехать в путешествие.",
+                "Я жду не дождусь, когда мы уже поедем в путешествие.",
+                "Я спокойно жду время, когда мы поедем в путешествие."
+            ],
+            correct: 1,
+            feedback: "Richtig! Sie kann es kaum erwarten, was perfekt durch „жду не дождусь“ ausgedrückt wird."
+        },
+        {
+            situation: "Maxim freut sich riesig auf das Wochenende, weil er dort seine Freunde wiedersieht. Welcher Satz passt zu seiner intensiven Vorfreude?",
+            options: [
+                "Я очень сильно жду время, когда наступят выходные.",
+                "Я не жду выходных.",
+                "Я забыл про выходные."
+            ],
+            correct: 0,
+            feedback: "Richtig! „Я очень сильно жду“ beschreibt das sehnsüchtige Warten auf eine bestimmte Zeit."
+        },
+        {
+            situation: "Ein russischer Vlogger beendet sein Video und möchte seine Zuschauer aktivieren. Er fragt sie ungeduldig in den Kommentaren, worauf sie sich am meisten freuen. Was sagt er?",
+            options: [
+                "Зачем вы тут сидите?",
+                "Что вы делаете в комментариях?",
+                "А чего вы ждете не дождетесь? Напишите в комментариях."
+            ],
+            correct: 2,
+            feedback: "Genau! Das ist der direkte Aufruf aus dem Transkript, um die Interaktion mit den Zuschauern zu starten."
+        },
+        {
+            situation: "Jemand sagt: „Он ждет не дождется встречи.“ Was bedeutet das im übertragenen Sinne für die Person?",
+            options: [
+                "Er hat keine Zeit für ein Treffen.",
+                "Er kann das Treffen kaum erwarten.",
+                "Er wartet schon sehr lange am Treffpunkt."
+            ],
+            correct: 1,
+            feedback: "Sehr gut! Es bedeutet, dass er dem Treffen mit riesiger Vorfreude entgegensieht."
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+
+    const situationText = document.getElementById('situation-text');
+    const optionsContainer = document.getElementById('options-container');
+    const questionNumber = document.getElementById('question-number');
+    const scoreDisplay = document.getElementById('score-display');
+    const feedbackDisplay = document.getElementById('feedback-display');
+    const nextBtn = document.getElementById('next-btn');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function loadQuestion() {
+        hasAnswered = false;
+        feedbackDisplay.textContent = "";
+        feedbackDisplay.className = "feedback-text";
+        nextBtn.disabled = true;
+
+        if (currentQuestionIndex >= questions.length) {
+            situationText.innerHTML = `<strong>Übung beendet!</strong><br><br>Du hast das Kontext-Verständnis erfolgreich absolviert.`;
+            optionsContainer.innerHTML = "";
+            questionNumber.textContent = "Fertig!";
+            nextBtn.style.display = "none";
+            return;
+        }
+
+        nextBtn.style.display = "block";
+        questionNumber.textContent = `Frage ${currentQuestionIndex + 1} von ${questions.length}`;
+        scoreDisplay.textContent = `Punkte: ${score}`;
+
+        const currentQuestion = questions[currentQuestionIndex];
+        situationText.textContent = currentQuestion.situation;
+        optionsContainer.innerHTML = "";
+
+        currentQuestion.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.classList.add('option-btn');
+            button.textContent = option;
+            button.addEventListener('click', () => handleOptionClick(index, button));
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function handleOptionClick(selectedIndex, clickedButton) {
+        if (hasAnswered) return; // Verhindert Mehrfachklicks
+        hasAnswered = true;
+
+        const currentQuestion = questions[currentQuestionIndex];
+        const allButtons = optionsContainer.querySelectorAll('.option-btn');
+
+        // Alle Buttons deaktivieren
+        allButtons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === currentQuestion.correct) {
+            clickedButton.classList.add('correct');
+            feedbackDisplay.textContent = currentQuestion.feedback;
+            feedbackDisplay.classList.add('correct');
+            score++;
+            scoreDisplay.textContent = `Punkte: ${score}`;
+        } else {
+            clickedButton.classList.add('wrong');
+            // Richtige Antwort trotzdem anzeigen (grün markieren)
+            allButtons[currentQuestion.correct].classList.add('correct');
+            feedbackDisplay.textContent = "Leider nicht ganz richtig. Sieh dir die grüne Option an.";
+            feedbackDisplay.classList.add('wrong');
+        }
+
+        nextBtn.disabled = false;
+    }
+
+    nextBtn.addEventListener('click', () => {
+        currentQuestionIndex++;
+        loadQuestion();
+    });
+
+    restartBtn.addEventListener('click', () => {
+        currentQuestionIndex = 0;
+        score = 0;
+        loadQuestion();
+    });
+
+    // Erster Start des Quizzes
+    loadQuestion();
+</script>
+
+</body>
+</html>
