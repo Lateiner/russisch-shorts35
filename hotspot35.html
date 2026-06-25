@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Bild-Hotspots</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #718096;
+            font-size: 1.05rem;
+        }
+
+        .question-box {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        /* Responsive Grid */
+        .hotspot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .hotspot-card {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hotspot-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+
+        .hotspot-card.active {
+            border-color: var(--success-color);
+            background-color: #f0fff4;
+        }
+
+        .hotspot-emoji {
+            font-size: 3.5rem;
+        }
+
+        .hotspot-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        /* Feedback-Anzeige */
+        .feedback-panel {
+            background: #f0fff4;
+            border: 2px solid var(--success-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            min-height: 90px;
+            display: none;
+            margin-bottom: 25px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .feedback-ru {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #22543d;
+            margin-bottom: 5px;
+        }
+
+        .feedback-de {
+            font-size: 1.05rem;
+            color: #2f855a;
+            font-style: italic;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2d3748;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Anpassungen */
+        @media (max-width: 650px) {
+            .hotspot-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .hotspot-emoji { font-size: 2.8rem; }
+            .question-box { font-size: 1.2rem; }
+            .feedback-ru { font-size: 1.15rem; }
+            .feedback-de { font-size: 0.95rem; }
+        }
+
+        @media (max-width: 440px) {
+            .hotspot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Anwendungsbezogene Sprachpraxis</h1>
+    <p class="instruction">Beantworte die Frage des Sprechers interaktiv:</p>
+    
+    <div class="question-box">А чего вы ждете не дождетесь?</div>
+
+    <div class="hotspot-grid" id="grid">
+        <!-- Hotspots werden per JavaScript generiert -->
+    </div>
+
+    <!-- Dynamisches Einblenden der individuellen Antwortphrase -->
+    <div class="feedback-panel" id="feedback-box">
+        <div class="feedback-ru" id="text-ru"></div>
+        <div class="feedback-de" id="text-de"></div>
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const hotspots = [
+        {
+            emoji: "🧳",
+            label: "Die Urlaubsreise",
+            phraseRu: "Я жду не дождусь, когда мы уже поедем в путешествие!",
+            phraseDe: "„Ich kann es kaum erwarten, bis wir endlich auf Reisen gehen!“"
+        },
+        {
+            emoji: "🛌",
+            label: "Das Wochenende / Ausschlafen",
+            phraseRu: "Я жду не дождусь sabato, чтобы долго спать.",
+            phraseDe: "„Ich kann den Samstag kaum erwarten, um lange zu schlafen.“"
+        },
+        {
+            emoji: "🎂",
+            label: "Der Geburtstag",
+            phraseRu: "Я жду не дождусь моего дня рождения!",
+            phraseDe: "„Ich kann meinen Geburtstag kaum erwarten!“"
+        },
+        {
+            emoji: "☀️",
+            label: "Der Sommer / Die Ferien",
+            phraseRu: "Я жду не дождусь летних каникул.",
+            phraseDe: "„Ich kann die Sommerferien kaum erwarten.“"
+        },
+        {
+            emoji: "☕",
+            label: "Die Kaffeepause / Treffen",
+            phraseRu: "Я жду не дождусь нашей встречи за кофе.",
+            phraseDe: "„Ich kann unser Treffen bei einem Kaffee kaum erwarten.“"
+        },
+        {
+            emoji: "🎬",
+            label: "Der Kinofilm / Abend",
+            phraseRu: "Я жду не дождусь нового фильма сегодня вечером.",
+            phraseDe: "„Ich kann den neuen Film heute Abend kaum erwarten.“"
+        }
+    ];
+
+    const grid = document.getElementById('grid');
+    const feedbackBox = document.getElementById('feedback-box');
+    const textRu = document.getElementById('text-ru');
+    const textDe = document.getElementById('text-de');
+    const restartBtn = document.getElementById('restart-btn');
+
+    function initHotspots() {
+        grid.innerHTML = '';
+        feedbackBox.style.display = 'none';
+        
+        hotspots.forEach((spot, index) => {
+            const card = document.createElement('div');
+            card.classList.add('hotspot-card');
+            card.dataset.index = index;
+
+            const emojiEl = document.createElement('div');
+            emojiEl.classList.add('hotspot-emoji');
+            emojiEl.textContent = spot.emoji;
+
+            const labelEl = document.createElement('div');
+            labelEl.classList.add('hotspot-label');
+            labelEl.textContent = spot.label;
+
+            card.appendChild(emojiEl);
+            card.appendChild(labelEl);
+            
+            card.addEventListener('click', () => handleHotspotClick(index, card));
+            grid.appendChild(card);
+        });
+    }
+
+    function handleHotspotClick(index, clickedCard) {
+        const allCards = grid.querySelectorAll('.hotspot-card');
+        allCards.forEach(c => c.classList.remove('active'));
+
+        clickedCard.classList.add('active');
+
+        const selectedSpot = hotspots[index];
+        textRu.textContent = selectedSpot.phraseRu;
+        textDe.textContent = selectedSpot.phraseDe;
+        
+        feedbackBox.style.display = 'block';
+        
+        if (window.innerWidth < 650) {
+            feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    // Event-Listener für den Neustart-Button
+    restartBtn.addEventListener('click', initHotspots);
+
+    // Hotspots beim Start aufbauen
+    initHotspots();
+</script>
+
+</body>
+</html>
