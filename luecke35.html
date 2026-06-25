@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Grammatik-Dropdown</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .sentence-row {
+            background: #edf2f7;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            line-height: 2;
+            font-size: 1.15rem;
+        }
+
+        /* Styling der Dropdown-Menüs im Text */
+        select {
+            font-size: 1.05rem;
+            padding: 4px 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            background-color: white;
+            color: var(--text-color);
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+            outline: none;
+            max-width: 100%;
+        }
+
+        select:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* Status-Klassen für direktes Feedback */
+        select.correct {
+            border-color: var(--success-color);
+            background-color: #f0fff4;
+            color: #22543d;
+            font-weight: bold;
+        }
+
+        select.wrong {
+            border-color: var(--error-color);
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+
+        .translation {
+            display: block;
+            font-size: 0.95rem;
+            color: #4a5568;
+            font-style: italic;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .feedback-summary {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 30px;
+            margin-bottom: 20px;
+            color: var(--success-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        button {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2d3748;
+        }
+
+        /* Responsive Anpassungen */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.4rem; }
+            .sentence-row { font-size: 1rem; padding: 15px; line-height: 2.2; }
+            select { font-size: 0.95rem; padding: 3px 6px; margin: 4px 2px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Grammatikalische Strukturen einsetzen</h1>
+    <p class="instruction">Wähle für jede Lücke das passende Wort aus. Du erhältst sofort eine Rückmeldung!</p>
+    
+    <div class="feedback-summary" id="summary"></div>
+
+    <div class="exercise-list" id="exercise-container">
+        <!-- Satz 1 -->
+        <div class="sentence-row">
+            Я 
+            <select class="drop-luecke" data-correct="жду">
+                <option value="" disabled selected>...</option>
+                <option value="жду">жду</option>
+                <option value="ждет">ждет</option>
+                <option value="ждем">ждем</option>
+            </select>
+            <select class="drop-luecke" data-correct="не">
+                <option value="" disabled selected>...</option>
+                <option value="нет">нет</option>
+                <option value="ни">ни</option>
+                <option value="не">не</option>
+            </select>
+            <select class="drop-luecke" data-correct="дождусь">
+                <option value="" disabled selected>...</option>
+                <option value="дождаться">дождаться</option>
+                <option value="дождусь">дождусь</option>
+                <option value="дождешься">дождешься</option>
+            </select>, когда мы уже поедем в путешествие.
+            <span class="translation">„Ich kann es kaum erwarten, bis wir endlich auf Reisen gehen.“</span>
+        </div>
+
+        <!-- Satz 2 -->
+        <div class="sentence-row">
+            Я очень сильно 
+            <select class="drop-luecke" data-correct="жду">
+                <option value="" disabled selected>...</option>
+                <option value="жду">жду</option>
+                <option value="подожду">подожду</option>
+                <option value="дождусь">дождусь</option>
+            </select> время, когда мы поедем в путешествие.
+            <span class="translation">„Ich warte sehnsüchtig auf die Zeit, in der wir verreisen werden.“</span>
+        </div>
+
+        <!-- Satz 3 -->
+        <div class="sentence-row">
+            Он 
+            <select class="drop-luecke" data-correct="ждет">
+                <option value="" disabled selected>...</option>
+                <option value="жду">жду</option>
+                <option value="ждет">ждет</option>
+                <option value="ждут">ждуt</option>
+            </select> не 
+            <select class="drop-luecke" data-correct="дождется">
+                <option value="" disabled selected>...</option>
+                <option value="дождется">дождется</option>
+                <option value="дождусь">дождусь</option>
+                <option value="дождутся">дождутся</option>
+            </select> встречи.
+            <span class="translation">„Er kann das Treffen kaum erwarten.“</span>
+        </div>
+
+        <!-- Satz 4 -->
+        <div class="sentence-row">
+            А чего вы 
+            <select class="drop-luecke" data-correct="ждете">
+                <option value="" disabled selected>...</option>
+                <option value="ждете">ждете</option>
+                <option value="ждут">ждут</option>
+                <option value="ждешь">ждешь</option>
+            </select> не 
+            <select class="drop-luecke" data-correct="дождетесь">
+                <option value="" disabled selected>...</option>
+                <option value="дождется">дождется</option>
+                <option value="дождетесь">дождетесь</option>
+                <option value="дождемся">дождемся</option>
+            </select>?
+            <span class="translation">„Und worauf könnt ihr es kaum erwarten?“</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="restart-btn">Neustart</button>
+    </div>
+</div>
+
+<script>
+    const dropdowns = document.querySelectorAll('.drop-luecke');
+    const summaryEl = document.getElementById('summary');
+    const restartBtn = document.getElementById('restart-btn');
+
+    // Event-Listener für direktes Feedback bei Änderung
+    dropdowns.forEach(select => {
+        select.addEventListener('change', (e) => {
+            const chosenValue = e.target.value;
+            const correctValue = e.target.dataset.correct;
+
+            if (chosenValue === correctValue) {
+                e.target.classList.remove('wrong');
+                e.target.classList.add('correct');
+            } else {
+                e.target.classList.remove('correct');
+                e.target.classList.add('wrong');
+            }
+
+            checkAllComplete();
+        });
+    });
+
+    // Prüft, ob alle Felder gelöst wurden und ob alles fehlerfrei ist
+    function checkAllComplete() {
+        let allSelected = true;
+        let allCorrect = true;
+
+        dropdowns.forEach(select => {
+            if (select.value === "") {
+                allSelected = false;
+            }
+            if (!select.classList.contains('correct')) {
+                allCorrect = false;
+            }
+        });
+
+        if (allSelected && allCorrect) {
+            summaryEl.textContent = "Perfekt! Alle grammatikalischen Formen sitzen! 🎉";
+        } else if (allSelected) {
+            summaryEl.style.color = "var(--error-color)";
+            summaryEl.textContent = "Einige Formen stimmen noch nicht ganz. Überprüfe die roten Felder!";
+        } else {
+            summaryEl.textContent = "";
+        }
+    }
+
+    // Neustart-Logik
+    restartBtn.addEventListener('click', () => {
+        dropdowns.forEach(select => {
+            select.value = ""; // Setzt auf den Platzhalter zurück
+            select.classList.remove('correct', 'wrong');
+        });
+        summaryEl.style.color = "var(--success-color)";
+        summaryEl.textContent = "";
+    });
+</script>
+
+</body>
+</html>
