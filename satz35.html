@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Russisch lernen: Satz-Korrektur</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #4a5568;
+            --success-color: #48bb78;
+            --error-color: #f56565;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #cbd5e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .instruction {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #718096;
+            font-size: 1rem;
+        }
+
+        .progress {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+
+        /* Satz-Box */
+        .sentence-container {
+            background: #edf2f7;
+            padding: 25px 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        /* Einzelne Wörter als Klick-Ziele */
+        .word-clickable {
+            padding: 6px 12px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .word-clickable:hover {
+            border-color: var(--primary-color);
+            background: #f7fafc;
+        }
+
+        .word-clickable.fixed {
+            background: #c6f6d5;
+            border-color: var(--success-color);
+            color: #22543d;
+            font-weight: bold;
+        }
+
+        .translation-hint {
+            text-align: center;
+            font-style: italic;
+            color: #4a5568;
+            margin-bottom: 30px;
+            min-height: 22px;
+        }
+
+        /* Modales Auswahlfenster (Pop-up) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            background: #edf2f7;
+            border: 2px solid #cbd5e0;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .opt-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-restart {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-restart:hover {
+            background: #2d3748;
+        }
+
+        /* Feedback-Anzeige */
+        .status-msg {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-height: 26px;
+            margin-bottom: 15px;
+            color: var(--success-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.4rem; }
+            .word-clickable { font-size: 1rem; padding: 5px 10px; }
+            .sentence-container { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Satz-Korrektur</h1>
+    <p class="instruction">In jedem Satz hat sich ein Fehler eingeschlichen. Finde das falsche Wort, klicke darauf und korrigiere es!</p>
+    
+    <div class="progress" id="progress">Satz 1 von 4</div>
+    <div class="status-msg" id="status-text"></div>
+
+    <div class="sentence-container" id="words-wrapper">
+        <!-- Wörter werden dynamisch generiert -->
+    </div>
+
+    <div class="translation-hint" id="translation-text"></div>
+
+    <div class="controls">
+        <button class="btn-restart" id="restart-btn">Neustart</button>
+    </div>
+</div>
+
+<!-- Modal für die Auswahl der Korrektur -->
+<div class="modal-overlay" id="modal">
+    <div class="modal-content">
+        <div class="modal-title">Wähle die richtige Korrektur:</div>
+        <div class="options-grid" id="modal-options">
+            <!-- Optionen werden dynamisch generiert -->
+        </div>
+    </div>
+</div>
+
+<script>
+    const dataset = [
+        {
+            // Fehler: "не жdu" statt "жду не"
+            displayWords: ["Я", "не", "жду", "дождусь,", "когда", "мы", "уже", "поедем", "в", "путешествие."],
+            errorIndex: 1, // "не" steht an falscher Stelle
+            options: ["жду не", "нет", "ни"], 
+            correctAnswer: "жду не", // Ersetzt das falsche Wort und korrigiert die Reihenfolge
+            // Zur Vereinfachung: Wir ersetzen das falsche Wort am Index mit dem richtigen Baustein
+            finalWords: ["Я", "жду не", "дождусь,", "когда", "мы", "уже", "поедем", "в", "путешествие."],
+            // Da "жду" danach überflüssig wird, bereinigen wir das im Code bei Erfolg
+            removeNext: true, 
+            translation: "„Ich kann es kaum erwarten, bis wir endlich auf Reisen gehen.“"
+        },
+        {
+            // Fehler: Infinitiv "дождаться" statt konjugiertes "дождусь"
+            displayWords: ["Я", "жду", "не", "дождаться,", "когда", "мы", "уже", "поедем", "в", "путешествие."],
+            errorIndex: 3,
+            options: ["дождусь", "дождется", "дождемся"],
+            correctAnswer: "дождусь",
+            finalWords: ["Я", "жду", "не", "дождусь,", "когда", "мы", "уже", "поедем", "в", "путешествие."],
+            removeNext: false,
+            translation: "„Ich kann es kaum erwarten, bis wir endlich auf Reisen gehen.“"
+        },
+        {
+            // Fehler: Falsches Pronomen/Konjugations-Match ("Он жду")
+            displayWords: ["Он", "жду", "не", "дождется", "встречи."],
+            errorIndex: 1,
+            options: ["ждет", "ждете", "ждут"],
+            correctAnswer: "ждет",
+            finalWords: ["Он", "ждет", "не", "дождется", "встречи."],
+            removeNext: false,
+            translation: "„Er kann das Treffen kaum erwarten.“"
+        },
+        {
+            // Fehler: Falsches Wort für die Negation verwendet ("нет")
+            displayWords: ["А", "чего", "вы", "ждете", "нет", "дождетесь?"],
+            errorIndex: 4,
+            options: ["не", "ни", "без"],
+            correctAnswer: "не",
+            finalWords: ["А", "чего", "вы", "ждете", "не", "дождетесь?"],
+            removeNext: false,
+            translation: "„Und worauf könnt ihr es kaum erwarten?“"
+        }
+    ];
+
+    let currentIdx = 0;
+    let selectedWordIndex = null;
+
+    const wordsWrapper = document.getElementById('words-wrapper');
+    const translationText = document.getElementById('translation-text');
+    const progressEl = document.getElementById('progress');
+    const statusText = document.getElementById('status-text');
+    const restartBtn = document.getElementById('restart-btn');
+    const modal = document.getElementById('modal');
+    const modalOptions = document.getElementById('modal-options');
+
+    function loadSentence() {
+        wordsWrapper.innerHTML = '';
+        statusText.textContent = '';
+        
+        if (currentIdx >= dataset.length) {
+            progressEl.textContent = "Übung abgeschlossen!";
+            translationText.textContent = "Klasse! Du hast alle Fehler erfolgreich korrigiert.";
+            return;
+        }
+
+        progressEl.textContent = `Satz ${currentIdx + 1} von ${dataset.length}`;
+        const data = dataset[currentIdx];
+        translationText.textContent = data.translation;
+
+        data.displayWords.forEach((word, index) => {
+            const span = document.createElement('span');
+            span.classList.add('word-clickable');
+            span.textContent = word;
+            span.addEventListener('click', () => handleWordClick(index));
+            wordsWrapper.appendChild(span);
+        });
+    }
+
+    function handleWordClick(clickedIndex) {
+        const data = dataset[currentIdx];
+        
+        if (clickedIndex === data.errorIndex) {
+            // Richtiges falsches Wort gefunden -> Öffne Auswahlfenster
+            selectedWordIndex = clickedIndex;
+            openModal(data.options);
+        } else {
+            // Auf ein fehlerfreies Wort geklickt -> Visueller Hinweis (rot blinken)
+            const words = wordsWrapper.querySelectorAll('.word-clickable');
+            words[clickedIndex].style.borderColor = 'var(--error-color)';
+            words[clickedIndex].style.backgroundColor = '#fed7d7';
+            setTimeout(() => {
+                words[clickedIndex].style.borderColor = '';
+                words[clickedIndex].style.backgroundColor = '';
+            }, 500);
+        }
+    }
+
+    function openModal(options) {
+        modalOptions.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.classList.add('opt-btn');
+            btn.textContent = opt;
+            btn.addEventListener('click', () => handleSelection(opt));
+            modalOptions.appendChild(btn);
+        });
+        modal.classList.add('active');
+    }
+
+    function closeModal() {
+        modal.classList.remove('active');
+    }
+
+    function handleSelection(chosenAnswer) {
+        const data = dataset[currentIdx];
+        closeModal();
+
+        if (chosenAnswer === data.correctAnswer) {
+            // Fehler erfolgreich korrigiert!
+            statusText.textContent = "Richtig korrigiert! 🎉";
+            
+            // Umbauen der Struktur zur richtigen Anzeige
+            wordsWrapper.innerHTML = '';
+            data.finalWords.forEach(word => {
+                const span = document.createElement('span');
+                span.classList.add('word-clickable', 'fixed');
+                span.textContent = word;
+                wordsWrapper.appendChild(span);
+            });
+
+            // Nach kurzer Verzögerung zum nächsten Satz springen
+            setTimeout(() => {
+                currentIdx++;
+                loadSentence();
+            }, 1500);
+        } else {
+            // Falsche Option im Pop-up gewählt
+            statusText.style.color = 'var(--error-color)';
+            statusText.textContent = "Das war nicht die richtige Form. Versuch es noch einmal!";
+            setTimeout(() => {
+                statusText.style.color = 'var(--success-color)';
+                statusText.textContent = '';
+            }, 2000);
+        }
+    }
+
+    // Schließen des Modals bei Klick außerhalb des Content-Fensters
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    restartBtn.addEventListener('click', () => {
+        currentIdx = 0;
+        loadSentence();
+    });
+
+    // Initialer Start
+    loadSentence();
+</script>
+
+</body>
+</html>
